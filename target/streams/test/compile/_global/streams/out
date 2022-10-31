@@ -1,0 +1,7 @@
+[0m[[0m[33mwarn[0m] [0m[0m/home/chengxiaoyu/chisel-riscv-32-cpu/src/test/scala/FetchTest.scala:8:25: type FreeSpec in package scalatest is deprecated (since 3.1.0): The org.scalatest.FreeSpec trait has been moved and renamed. Please use org.scalatest.freespec.AnyFreeSpec instead. This can be rewritten automatically with autofix: https://github.com/scalatest/autofix/tree/master/3.1.x[0m
+[0m[[0m[33mwarn[0m] [0m[0mclass FetchTest extends FreeSpec with ChiselScalatestTester with Matchers[0m
+[0m[[0m[33mwarn[0m] [0m[0m                        ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/chengxiaoyu/chisel-riscv-32-cpu/src/test/scala/FetchTest.scala:8:66: type Matchers in package scalatest is deprecated (since 3.1.0): The org.scalatest.Matchers trait has been moved and renamed. Please use org.scalatest.matchers.should.Matchers instead. This can be rewritten automatically with autofix: https://github.com/scalatest/autofix/tree/master/3.1.x[0m
+[0m[[0m[33mwarn[0m] [0m[0mclass FetchTest extends FreeSpec with ChiselScalatestTester with Matchers[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                 ^[0m
+[0m[[0m[33mwarn[0m] [0m[0mtwo warnings found[0m

@@ -1,11 +1,29 @@
-[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(passthrough.PassthroughTest, org.scalatest.tools.Framework$$anon$1@70bedccb, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(fetch.FetchTest, org.scalatest.tools.Framework$$anon$1@313044c, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(passthrough.PassthroughTest, org.scalatest.tools.Framework$$anon$1@313044c, false, [SuiteSelector])[0m
 [0m[[0m[0minfo[0m] [0m[0m[32mPassthroughTest:[0m[0m
 [0m[[0m[0minfo[0m] [0m[0m[32mPassthroughGenerator[0m[0m
 [0m[[0m[0minfo[0m] [0m[0m[32m- should pass through bits[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 2 seconds, 155 milliseconds.[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 1[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 1, aborted 0[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mFetchTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m- fetch test *** FAILED ***[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  chiseltest.TimeoutException: timeout on Top.clock: IO[Clock] at 1000 idle cycles. You can extend the timeout by calling .setTimeout(<n>) on your clock (setting it to 0 means 'no timeout').[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.internal.GenericBackend.$anonfun$run$7(GenericBackend.scala:188)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.internal.GenericBackend.$anonfun$run$7$adapted(GenericBackend.scala:185)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at scala.collection.mutable.HashMap$Node.foreach(HashMap.scala:627)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at scala.collection.mutable.HashMap.foreach(HashMap.scala:489)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.internal.GenericBackend.run(GenericBackend.scala:185)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.internal.Context$.$anonfun$run$1(Testers2.scala:34)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at scala.util.DynamicVariable.withValue(DynamicVariable.scala:59)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.internal.Context$.run(Testers2.scala:34)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.ChiselScalatestTester.chiseltest$ChiselScalatestTester$$runTest(ChiselScalatestTester.scala:103)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  at chiseltest.ChiselScalatestTester$TestBuilder.apply(ChiselScalatestTester.scala:31)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  ...[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 2 seconds, 776 milliseconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 2[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 2, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 1, failed 1, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m*** 1 TEST FAILED ***[0m[0m
 [0m[[0m[0mdebug[0m] [0m[0mPassed tests:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	passthrough.PassthroughTest[0m
+[0m[[0m[31merror[0m] [0m[0mFailed tests:[0m
+[0m[[0m[31merror[0m] [0m[0m	fetch.FetchTest[0m
+[0m[[0m[31merror[0m] [0m[0m(Test / [31mtest[0m) sbt.TestsFailedException: Tests unsuccessful[0m
