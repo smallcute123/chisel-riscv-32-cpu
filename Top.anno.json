@@ -18,6 +18,6 @@
     "class":"firrtl.transforms.BlackBoxInlineAnno",
     "target":"Top.Memory",
     "name":"Top.Memory.mem.v",
-    "text":"module BindsTo_0_Memory(\n  input         clock,\n  input  [31:0] io_imem_addr,\n  output [31:0] io_imem_inst\n);\n\ninitial begin\n  $readmemh(\"src/hex/fetch.hex\", Memory.mem);\nend\n                      endmodule\n\nbind Memory BindsTo_0_Memory BindsTo_0_Memory_Inst(.*);"
+    "text":"module BindsTo_0_Memory(\n  input         clock,\n  input  [31:0] io_imem_addr,\n  output [31:0] io_imem_inst,\n  input  [31:0] io_dmem_addr,\n  output [31:0] io_dmem_rdata,\n  input         io_dmem_wen,\n  input  [31:0] io_dmem_wdata\n);\n\ninitial begin\n  $readmemh(\"src/hex/fetch.hex\", Memory.mem);\nend\n                      endmodule\n\nbind Memory BindsTo_0_Memory BindsTo_0_Memory_Inst(.*);"
   }
 ]

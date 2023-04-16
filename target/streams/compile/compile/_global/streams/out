@@ -1,4 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/home/chengxiaoyu/chisel-riscv-32-cpu/src/main/scala/fetch/Core.scala:15:26: not found: value Start_ADDR[0m
-[0m[[0m[31merror[0m] [0m[0m    val pc_reg = RegInit(Start_ADDR)//0[0m
-[0m[[0m[31merror[0m] [0m[0m                         ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/chengxiaoyu/chisel-riscv-32-cpu/src/main/scala/fetch/Top.scala:13:34: no arguments allowed for nullary constructor Memory: (): fetch.Memory[0m
+[0m[[0m[31merror[0m] [0m[0m  val memory = Module(new Memory("src/hex/fetch.hex"))[0m
+[0m[[0m[31merror[0m] [0m[0m                                 ^[0m
 [0m[[0m[31merror[0m] [0m[0mone error found[0m
