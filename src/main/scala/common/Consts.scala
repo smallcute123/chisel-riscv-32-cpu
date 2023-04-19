@@ -34,14 +34,17 @@ object Consts{
     //2
     val OP1_LEN = 2
     val OP1_RS1 = 0.U(OP1_LEN.W)
+    val OP1_PC  = 1.U(OP1_LEN.W)
     val OP1_X   = 2.U(OP1_LEN.W)
 
     //3
-    val OP2_LEN = 2
-    val OP2_X = 0.U(OP1_LEN.W)
-    val OP2_RS2 = 1.U(OP1_LEN.W)
+    val OP2_LEN = 3
+    val OP2_X = 0.U(OP2_LEN.W)
+    val OP2_RS2 = 1.U(OP2_LEN.W)
     val OP2_IMI = 2.U(OP2_LEN.W)
-    val OP2_IMS = 3.U(OP1_LEN.W)//IMS 与 IMM 只是不同指令中规定的立即数的位置不同
+    val OP2_IMS = 3.U(OP2_LEN.W)//IMS 与 IMM 只是不同指令中规定的立即数的位置不同
+    val OP2_IMJ = 4.U(OP2_LEN.W)
+    val OP2_IMU = 5.U(OP2_LEN.W)
     //4
     val MEN_LEN = 2
     val MEN_X = 0.U
@@ -57,6 +60,7 @@ object Consts{
     val WB_X = 0.U(WB_SEL_LEN.W)
     val WB_MEM = 1.U(WB_SEL_LEN.W)
     val WB_ALU = 0.U(WB_SEL_LEN.W)
+    val WB_PC      = 2.U(WB_SEL_LEN.W)
 
     val CSR_LEN = 3
     val CSR_X   = 0.U(CSR_LEN.W)

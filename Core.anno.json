@@ -9,6 +9,27 @@
   },
   {
     "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~Core|Core>io_dmem_wdata",
+    "sources":[
+      "~Core|Core>io_imem_inst"
+    ]
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~Core|Core>io_dmem_wen",
+    "sources":[
+      "~Core|Core>io_imem_inst"
+    ]
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~Core|Core>io_dmem_addr",
+    "sources":[
+      "~Core|Core>io_imem_inst"
+    ]
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
     "sink":"~Core|Core>io_exit",
     "sources":[
       "~Core|Core>io_imem_inst"
