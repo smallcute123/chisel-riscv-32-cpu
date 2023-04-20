@@ -6,6 +6,8 @@ import chisel3.util._
 object Consts{
     val WORD_LEN      = 32
     val START_ADDR    = 0.U(WORD_LEN.W)
+    val ADDR_LEN      = 5 // rs1,rs2,wb
+    val CSR_ADDR_LEN  = 12
     //1
     val EXE_FUN_LEN = 5
     val ALU_X       =  0.U(EXE_FUN_LEN.W)
@@ -26,7 +28,7 @@ object Consts{
     val BR_BLTU     = 15.U(EXE_FUN_LEN.W)
     val BR_BGEU     = 16.U(EXE_FUN_LEN.W)
     val ALU_JALR    = 17.U(EXE_FUN_LEN.W)
-    val ALU_COPY1   = 18.U(EXE_FUN_LEN.W)
+    val ALU_COPY   = 18.U(EXE_FUN_LEN.W)
     val ALU_VADDVV  = 19.U(EXE_FUN_LEN.W)
     val VSET        = 20.U(EXE_FUN_LEN.W)
     val ALU_PCNT    = 21.U(EXE_FUN_LEN.W)
@@ -36,6 +38,7 @@ object Consts{
     val OP1_RS1 = 0.U(OP1_LEN.W)
     val OP1_PC  = 1.U(OP1_LEN.W)
     val OP1_X   = 2.U(OP1_LEN.W)
+    val OP1_IMZ = 3.U(OP1_LEN.W)
 
     //3
     val OP2_LEN = 3
@@ -61,9 +64,18 @@ object Consts{
     val WB_MEM = 1.U(WB_SEL_LEN.W)
     val WB_ALU = 0.U(WB_SEL_LEN.W)
     val WB_PC      = 2.U(WB_SEL_LEN.W)
+    val WB_CSR     = 3.U(WB_SEL_LEN.W)
+    val WB_MEM_V   = 4.U(WB_SEL_LEN.W)
+    val WB_ALU_V   = 5.U(WB_SEL_LEN.W)
+    val WB_VL      = 6.U(WB_SEL_LEN.W)
 
     val CSR_LEN = 3
     val CSR_X   = 0.U(CSR_LEN.W)
+    val CSR_W   = 1.U(CSR_LEN.W)
+    val CSR_S   = 2.U(CSR_LEN.W)
+    val CSR_C   = 3.U(CSR_LEN.W)
+    val CSR_E   = 4.U(CSR_LEN.W)
+    val CSR_V   = 5.U(CSR_LEN.W)
 
 
 }

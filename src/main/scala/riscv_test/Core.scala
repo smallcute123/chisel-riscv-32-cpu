@@ -1,4 +1,4 @@
-package  fetch
+package riscv_test
 
 import chisel3._
 import chisel3.stage.ChiselStage
@@ -13,6 +13,7 @@ class Core extends Module{
         val exit = Output(Bool())
     })
     val regfile = Mem(32,UInt(WORD_LEN.W))
+    val csrfile = Mem(4096, UInt(WORD_LEN.W))
     //****************************
     //Instruction Fetch(IF) Stage
     val pc_reg = RegInit(0.U(WORD_LEN.W))//0
@@ -30,7 +31,8 @@ class Core extends Module{
     val pc_next = MuxCase(pc_reg+4.U,
     Seq(
         br_flag -> br_target,
-        (inst === JAL||inst === JALR)-> alu_out
+        (inst === JAL||inst === JALR)-> alu_out,
+        (inst === ECALL) -> csrfile(0x305)
     )
 
     )
@@ -54,6 +56,8 @@ class Core extends Module{
     val imm_u_sext = Cat(imm_u, Fill(12,0.U))
     val imm_b = Cat(inst(31),inst(7),inst(30,25),inst(11,8))
     val imm_b_sext = Cat(Fill(19,imm_b(11)),imm_b,0.U(1.U))
+    val imm_z = inst(19,15)
+    val imm_z_sext= Cat(Fill(27,0.U),imm_z)
     val csignals = ListLookup(inst,
         List(ALU_X,OP1_X,OP2_X,MEN_X,REN_X,WB_X,CSR_X),
         Array(
@@ -94,6 +98,15 @@ class Core extends Module{
             BGEU  -> List(BR_BGEU  , OP1_RS1, OP2_RS2, MEN_X, REN_X, WB_X  , CSR_X),
             BLT   -> List(BR_BLT   , OP1_RS1, OP2_RS2, MEN_X, REN_X, WB_X  , CSR_X),
             BLTU  -> List(BR_BLTU  , OP1_RS1, OP2_RS2, MEN_X, REN_X, WB_X  , CSR_X),
+            //csr
+            CSRRW -> List(ALU_COPY, OP1_RS1, OP2_X  , MEN_X, REN_S, WB_CSR, CSR_W),
+            CSRRWI-> List(ALU_COPY, OP1_IMZ, OP2_X  , MEN_X, REN_S, WB_CSR, CSR_W),
+            CSRRS -> List(ALU_COPY, OP1_RS1, OP2_X  , MEN_X, REN_S, WB_CSR, CSR_S),
+            CSRRSI-> List(ALU_COPY, OP1_IMZ, OP2_X  , MEN_X, REN_S, WB_CSR, CSR_S),
+            CSRRC -> List(ALU_COPY, OP1_RS1, OP2_X  , MEN_X, REN_S, WB_CSR, CSR_C),
+            CSRRCI-> List(ALU_COPY, OP1_IMZ, OP2_X  , MEN_X, REN_S, WB_CSR, CSR_C),
+            //
+            ECALL -> List(ALU_X    , OP1_X  , OP2_X  , MEN_X, REN_X, WB_X  , CSR_E)
             
         ))//ListLookup的功能：信号线csignals按照inst的内容来设置，inst是用来进行match的，
         //The third argument is an Array of "key"->"value" tuples. The inst is matched against the keys to find a match and the csignals is set to the value part if a match is found.
@@ -102,6 +115,7 @@ class Core extends Module{
         Seq(
         (op1_sel === OP1_RS1) -> rs1_data,
         (op1_sel === OP1_PC ) -> pc_reg,
+        (op1_sel === OP1_IMZ) -> imm_z_sext
 
         )
     )
@@ -130,6 +144,7 @@ class Core extends Module{
             (exe_fun === ALU_SLT) -> (op1_data.asSInt() < op2_data.asSInt()).asUInt(),
             (exe_fun === ALU_SLTU) -> (op1_data < op2_data).asUInt(),
             (exe_fun === ALU_JALR) -> ((op1_data+op2_data) & inv_one),
+            (exe_fun === ALU_COPY) -> (op1_data)
 
 
         )
@@ -146,16 +161,28 @@ class Core extends Module{
     br_target := pc_reg + imm_b_sext
     //*****************************
     //access memory
-
         io.dmem.wen := mem_wen
         io.dmem.addr:= alu_out
         io.dmem.wdata := rs2_data
+    val csr_addr = Mux(csr_cmd === CSR_E, 0x342.U(CSR_ADDR_LEN.W),inst(31,20))
+    val csr_rdata = csrfile(csr_addr)
+    val csr_wdata = MuxCase(0.U(WORD_LEN.W),
+    Seq(
+        (csr_cmd === CSR_W)-> alu_out,
+        (csr_cmd === CSR_S)-> (csr_rdata & ~alu_out),
+        (csr_cmd === CSR_C)-> (csr_rdata | alu_out),
+        (csr_cmd === CSR_E)-> 11.U(WORD_LEN.W)
+    ))
+    when(csr_cmd>0.U){
+        csrfile(wb_addr) := csr_wdata
+    }
 
     //write back
     val wb_data = MuxCase(alu_out,
     Seq(
         (wb_sel === WB_MEM) -> io.dmem.rdata,
-        (wb_sel === WB_PC) -> (pc_reg+4.U)
+        (wb_sel === WB_PC) -> (pc_reg+4.U),
+        (wb_sel === WB_CSR) -> csr_rdata
     )
     )
     

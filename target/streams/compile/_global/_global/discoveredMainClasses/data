@@ -1,1 +1,1 @@
-["fetch.fetch_Generator","fetch.fetch_core_Generator","passthrough.Passthrough"]
+["passthrough.Passthrough","riscv_test.fetch_Generator","riscv_test.fetch_core_Generator"]
