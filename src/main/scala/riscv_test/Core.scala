@@ -38,27 +38,31 @@ class Core extends Module{
     )
     pc_reg:= pc_next
     io.exit := (inst === 0x5872e24d.U(WORD_LEN.W))//遇到特定的instruction 会拉高，是testbench判断测试结束的标志
+    //IF/DE
+    val if_de_inst = RegNext(inst,0.U(WORD_LEN.W))
+    val if_de_pc = RegNext(pc_reg,0.U(WORD_LEN.W))
 
     //*****************************
     //Instruction Decode(ID) Stage
-    val rs1_addr = inst(19,15)
-    val rs2_addr = inst(24,20)
+    val rs1_addr = if_de_inst(19,15)
+    val rs2_addr = if_de_inst(24,20)
     val rs1_data = Mux((rs1_addr =/= 0.U(WORD_LEN.W)),regfile(rs1_addr),0.U(WORD_LEN.W))//从通用寄存器第一位中取的数字永远都要是0，既然如此，取第一位数字的时候，就不用真的去执行“取”操作，而是只要加个mux判断，如果是要取第一位的值，不用取，直接把返回值设成0。
     val rs2_data = Mux((rs2_addr =/= 0.U(WORD_LEN.W)),regfile(rs2_addr),0.U(WORD_LEN.W))
-    val imm_s = Cat(inst(31,25),inst(11,7))
+    val imm_s = Cat(if_de_inst(31,25),if_de_inst(11,7))
     val imm_s_sext = Cat(Fill(20,imm_s(11)),imm_s)//将imm_s扩展到32位
-    val imm_i = inst(31,20)
+    val imm_i = if_de_inst(31,20)
     val imm_i_sext = Cat(Fill(20,imm_i(11)),imm_i)
-    val wb_addr = inst(11,7)
-    val imm_j = Cat(inst(31), inst(19,12), inst(20), inst(30,21))
+    val wb_addr = if_de_inst(11,7)
+    val imm_j = Cat(if_de_inst(31), if_de_inst(19,12), if_de_inst(20), if_de_inst(30,21))
     val imm_j_sext = Cat(Fill(11,imm_j(19)),imm_j,0.U(1.U))
-    val imm_u = Cat(inst(31,12))
+    val imm_u = Cat(if_de_inst(31,12))
     val imm_u_sext = Cat(imm_u, Fill(12,0.U))
-    val imm_b = Cat(inst(31),inst(7),inst(30,25),inst(11,8))
+    val imm_b = Cat(if_de_inst(31),if_de_inst(7),if_de_inst(30,25),if_de_inst(11,8))
     val imm_b_sext = Cat(Fill(19,imm_b(11)),imm_b,0.U(1.U))
-    val imm_z = inst(19,15)
+    val imm_z = if_de_inst(19,15)
     val imm_z_sext= Cat(Fill(27,0.U),imm_z)
-    val csignals = ListLookup(inst,
+    
+    val csignals = ListLookup(if_de_inst,
         List(ALU_X,OP1_X,OP2_X,MEN_X,REN_X,WB_X,CSR_X),
         Array(
             SW -> List(ALU_ADD,OP1_RS1,OP2_IMS,MEN_S,REN_X,WB_X,CSR_X),
@@ -114,7 +118,7 @@ class Core extends Module{
     val op1_data = MuxCase(0.U(WORD_LEN.W),
         Seq(
         (op1_sel === OP1_RS1) -> rs1_data,
-        (op1_sel === OP1_PC ) -> pc_reg,
+        (op1_sel === OP1_PC ) -> if_de_pc_reg,
         (op1_sel === OP1_IMZ) -> imm_z_sext
 
         )
@@ -128,66 +132,100 @@ class Core extends Module{
             (op2_sel === OP2_IMU)-> imm_u_sext
         )
     )
+    val csr_addr = Mux(csr_cmd === CSR_E, 0x342.U(CSR_ADDR_LEN.W),if_de_inst(31,20))
+    //DE/EX
+    val de_ex_pc_reg = RegNext(if_de_pc_reg,0.U(WORD_LEN.W))
+    val de_ex_wb_addr = RegNext(wb_addr,0.U(WORD_LEN.W))//wb
+    val de_ex_op1_data = RegNext(op1_data,0.U(WORD_LEN.W))
+    val de_ex_op2_data = RegNext(op2_data,0.U(WORD_LEN.W))
+    val de_ex_rs2_data = RegNext(rs2_data,0.U(WORD_LEN.W))
+    val de_ex_rf_wen = RegNext(rf_wen,0.U(REN_LEN.W))//wb
+    val de_ex_exe_fun = RegNext(exe_fun,0.U(EXE_FUN_LEN.W))
+    val de_ex_wb_sel = RegNext(wb_sel,0.U(WB_SEL_LEN.W))
+    val de_ex_mem_wen = RegNext(mem_wen,0.U(MEM_LEN.W))
+    val de_ex_csr_cmd = RegNext(csr_cmd,0.U(CSR_LEN.W))
+    val de_ex_imm_b_sext = RegNext(imm_b_sext,0.U(WORD_LEN.W))//exe
+    val de_ex_csr_addr = RegNext(csr_addr,0.U(CSR_ADDR_LEN.W))//am
+
+  
     //*****************************
     //Excute Stage(ES)
     val inv_one = Cat(Fill(WORD_LEN-1,1.U(1.W)),0.U(1.U))
+    
     alu_out := MuxCase(0.U(WORD_LEN.W),
         Seq(
-            (exe_fun === ALU_ADD) -> (op1_data + op2_data),
-            (exe_fun === ALU_SUB) -> (op1_data - op2_data),
-            (exe_fun === ALU_AND) -> (op1_data & op2_data),
-            (exe_fun === ALU_OR)  -> (op1_data | op2_data),
-            (exe_fun === ALU_XOR) -> (op1_data ^ op2_data),
-            (exe_fun === ALU_SLL) -> (op1_data << op2_data(4,0))(31,0),//op2_data(4,0)因为只要五位就可以表示32位的偏移量
-            (exe_fun === ALU_SRL) -> (op1_data >> op2_data(4,0)),
-            (exe_fun === ALU_SRA) -> (op1_data.asSInt() >> op2_data(4, 0)).asUInt(),//asSInt相对于verilog的signed
-            (exe_fun === ALU_SLT) -> (op1_data.asSInt() < op2_data.asSInt()).asUInt(),
-            (exe_fun === ALU_SLTU) -> (op1_data < op2_data).asUInt(),
-            (exe_fun === ALU_JALR) -> ((op1_data+op2_data) & inv_one),
-            (exe_fun === ALU_COPY) -> (op1_data)
+            (de_ex_exe_fun === ALU_ADD) -> (de_ex_op1_data + de_ex_op2_data),
+            (de_ex_exe_fun === ALU_SUB) -> (de_ex_op1_data - de_ex_op2_data),
+            (de_ex_exe_fun === ALU_AND) -> (de_ex_op1_data & de_ex_op2_data),
+            (de_ex_exe_fun === ALU_OR)  -> (de_ex_op1_data | de_ex_op2_data),
+            (de_ex_exe_fun === ALU_XOR) -> (de_ex_op1_data ^ de_ex_op2_data),
+            (de_ex_exe_fun === ALU_SLL) -> (de_ex_op1_data << de_ex_op2_data(4,0))(31,0),//op2_data(4,0)因为只要五位就可以表示32位的偏移量
+            (de_ex_exe_fun === ALU_SRL) -> (de_ex_op1_data >> de_ex_op2_data(4,0)),
+            (de_ex_exe_fun === ALU_SRA) -> (de_ex_op1_data.asSInt() >> de_ex_op2_data(4, 0)).asUInt(),//asSInt相对于verilog的signed
+            (de_ex_exe_fun === ALU_SLT) -> (de_ex_op1_data.asSInt() < de_ex_op2_data.asSInt()).asUInt(),
+            (de_ex_exe_fun === ALU_SLTU) -> (de_ex_op1_data < de_ex_op2_data).asUInt(),
+            (de_ex_exe_fun === ALU_JALR) -> ((de_ex_op1_data+de_ex_op2_data) & inv_one),
+            (de_ex_exe_fun === ALU_COPY) -> (de_ex_op1_data)
 
 
         )
     )
     br_flag := MuxCase(false.B,
     Seq(
-            (exe_fun === BR_BEQ)  ->  (op1_data === op2_data),
-            (exe_fun === BR_BNE)  -> !(op1_data === op2_data),
-            (exe_fun === BR_BLT)  ->  (op1_data.asSInt() < op2_data.asSInt()),
-            (exe_fun === BR_BGE)  -> !(op1_data.asSInt() < op2_data.asSInt()),
-            (exe_fun === BR_BLTU) ->  (op1_data < op2_data),
-            (exe_fun === BR_BGEU) -> !(op1_data < op2_data)
+            (de_ex_exe_fun === BR_BEQ)  ->  (de_ex_op1_data === de_ex_op2_data),
+            (de_ex_exe_fun === BR_BNE)  -> !(de_ex_op1_data === de_ex_op2_data),
+            (de_ex_exe_fun === BR_BLT)  ->  (de_ex_op1_data.asSInt() < de_ex_op2_data.asSInt()),
+            (de_ex_exe_fun === BR_BGE)  -> !(de_ex_op1_data.asSInt() < de_ex_op2_data.asSInt()),
+            (de_ex_exe_fun === BR_BLTU) ->  (de_ex_op1_data < de_ex_op2_data),
+            (de_ex_exe_fun === BR_BGEU) -> !(de_ex_op1_data < de_ex_op2_data)
     ))
-    br_target := pc_reg + imm_b_sext
+    br_target := de_ex_pc_reg + de_ex_imm_b_sext
     //*****************************
+    //EX/AM
+    val ex_am_pc_reg = RegNext(de_ex_pc_reg,0.U(WORD_LEN.W))
+    val ex_am_alu_out = RegNext (alu_out,0.U(WORD_LEN.W))
+    val ex_am_rs2_data = RegNext (de_ex_rs2_data,0.U(WORD_LEN.W))
+    val ex_am_mem_wen = RegNext (de_ex_mem_wen,0.U(MEM_LEN.W))
+    val ex_am_csr_cmd = RegNext(de_ex_csr_cmd,0.U(CSR_LEN.W))
+    val ex_am_csr_addr = RegNext(de_ex_csr_addr,0.U(CSR_ADDR_LEN.W))//am
+    val ex_am_wb_sel = RegNext(de_ex_wb_sel,0.U(WB_SEL_LEN.W))//wb
+    val ex_am_wb_addr = RegNext(de_ex_wb_addr,0.U(WORD_LEN.W))//wb  
+    val ex_am_rf_wen = RegNext(de_ex_rf_wen,0.U(REN_LEN.W))//wb
+
     //access memory
-        io.dmem.wen := mem_wen
-        io.dmem.addr:= alu_out
-        io.dmem.wdata := rs2_data
-    val csr_addr = Mux(csr_cmd === CSR_E, 0x342.U(CSR_ADDR_LEN.W),inst(31,20))
-    val csr_rdata = csrfile(csr_addr)
+        io.dmem.wen := ex_am_mem_wen
+        io.dmem.addr:= ex_am_alu_out
+        io.dmem.wdata := ex_am_rs2_data
+    val csr_rdata = csrfile(ex_am_csr_addr)
     val csr_wdata = MuxCase(0.U(WORD_LEN.W),
     Seq(
-        (csr_cmd === CSR_W)-> alu_out,
-        (csr_cmd === CSR_S)-> (csr_rdata & ~alu_out),
-        (csr_cmd === CSR_C)-> (csr_rdata | alu_out),
-        (csr_cmd === CSR_E)-> 11.U(WORD_LEN.W)
+        (ex_am_csr_cmd === CSR_W)-> ex_am_alu_out,
+        (ex_am_csr_cmd === CSR_S)-> (csr_rdata & ~ex_am_alu_out),
+        (ex_am_csr_cmd === CSR_C)-> (csr_rdata | ex_am_alu_out),
+        (ex_am_csr_cmd === CSR_E)-> 11.U(WORD_LEN.W)
     ))
     when(csr_cmd>0.U){
-        csrfile(wb_addr) := csr_wdata
+        csrfile(ex_am_csr_addr) := csr_wdata
     }
 
+
+    //AM/WB
+    val am_wb_pc_reg = RegNext(ex_am_pc_reg,0.U(WORD_LEN.W))
+    val am_wb_alu_out = RegNext (ex_am_alu_out,0.U(WORD_LEN.W))
+    val am_wb_wb_sel = RegNext(ex_am_wb_sel,0.U(WB_SEL_LEN.W))//wb
+    val am_wb_wb_addr = RegNext(ex_am_wb_addr,0.U(WORD_LEN.W))//wb  
+    val am_wb_rf_wen = RegNext(ex_am_rf_wen,0.U(REN_LEN.W))//wb
+    val am_wb_csr_rdata= RegNext(csr_rdata,0.U(WORD_LEN.W))
     //write back
-    val wb_data = MuxCase(alu_out,
+    val wb_data = MuxCase(am_wb_alu_out,
     Seq(
-        (wb_sel === WB_MEM) -> io.dmem.rdata,
-        (wb_sel === WB_PC) -> (pc_reg+4.U),
-        (wb_sel === WB_CSR) -> csr_rdata
+        (am_wb_wb_sel === WB_MEM) -> io.dmem.rdata,
+        (am_wb_wb_sel === WB_PC) -> (am_wb_pc_reg+4.U),
+        (am_wb_wb_sel === WB_CSR) -> am_wb_csr_rdata
     )
     )
-    
-    when(rf_wen === REN_S){
-        regfile(wb_addr) := wb_data
+    when(am_wb_rf_wen === REN_S){
+        regfile(am_wb_wb_addr) := wb_data
     }
 
 
