@@ -1,6 +1,6 @@
 # chisel-riscv-32-cpu
 基于chisel搭建的单周期五级流水线cpu
-<img src="./archi.pdf" alt="p1" style="zoom:50%;" />
+<img src="./archi.png" alt="p1" style="zoom:50%;" />
 ### 五级流水线结构介绍
 
 1. **取指(fetch)** : 从内存中获取指令并将其存储在指令寄存器中。
